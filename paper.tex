@@ -4,14 +4,25 @@
 
 \begin{document}
 
-\title{The summary title}
+\title{Advanced forensic Ext4 inode carving}
 
 \numberofauthors{3} 
 \author{
-\alignauthor
-Jakub Marou\v sek
-       \email{jakub.marousek@gmail.com}%
-% put your details here
+\alignauthor Jakub Marou\v sek \\
+	\affaddr{Univerza v Ljubljani}\\
+    \affaddr{Fakulteta za ra\v cunalništvo in informatiko}\\
+    \affaddr{1000, Ljubljana}\\
+    \email{jakub.marousek@gmail.com}%
+\alignauthor Jan Ivanjko \\
+	\affaddr{Univerza v Ljubljani}\\
+    \affaddr{Fakulteta za ra\v cunalništvo in informatiko}\\
+    \affaddr{1000, Ljubljana}\\
+	\email{ji4988@student.uni-lj.si}%
+\alignauthor Jernej Katanec \\
+	\affaddr{Univerza v Ljubljani}\\
+    \affaddr{Fakulteta za ra\v cunalništvo in informatiko}\\
+    \affaddr{1000, Ljubljana}\\
+	\email{jk6071@student.uni-lj.si}%
 }
 
 \maketitle
@@ -113,7 +124,43 @@ It is worth noting that Theodore Ts'o considered ext4 not to be a major advance 
 
 {\it ZFS} \cite{zfs} was developed by Oracle, but after the end of support the project was handled to the open-source community \cite{openzfs}. It supports journaling, read-only snaphots of the files state, RAID or checksums of files. On Ubuntu, ZFS has been chosen as the default filesystem for containers.
 
-\subsection{Files carving}
+\subsection{File carving}
+
+File carving, or sometimes just "carving" is the process of extracting data collection from a larger data set. Digital investigation often include data carving techniques when unallocated file system space is analysed to extract files. These files are carved from the unallocated space using file type-specific header and footer values.
+
+File carving is not the same as file recovery. File recovery techniques rely on the file system information that remains after the deletion of a file to recover those files. On the other hand file carving techniques are used to restore as much data or data fragments as possible, when the file system is corrupted or deleted. Carving or raw data recovery process does not rely on the file system structures. It searches block by block for data matching the specific file type header and footer values. 
+
+In digital forensics carving is especially useful in criminal cases, becouse it can recover evidence. As long as data on a disk is not overwritten or wiped, it can be restored using file carving techniques. Sometimes even data from formatted drives can be restored if the conditions are right. The most common general techniques to carve files are:
+
+\begin{itemize}
+\item \textbf{File Structure Based carving}
+This technique uses identifier string, header, footer and size information to assume internal layout of a file. Header is a unique identifier, its value identifies the type of a file. Its existence means we can identify the beginning of a file, while the existence of a footer shows the tail of a file.
+The blocks between the header and the footer represent the targeted file. In some cases file format has no footer, therefore a maximum file size is used in the carving program.
+\item \textbf{Content based carving}
+Carving based on content structure (MBOX, HTML, XML) or linguistic analysis of the file's content. A semantic carver might conclude that some blocks of German in a middle of a long HTML file written in English is a fragment left from a previous allocated file, and not from the English HTML file. Similarly for other content characteristics like, character count, information entropy, white and black listing of data.
+\end{itemize}
+Carving can be classified as basic and advanced, with basic it is assumed that:
+\begin{itemize} 
+\item the beginning of file is not overwritten
+\item the file is not fragmented
+\item the file is not compressed
+\end{itemize}
+Advanced carving relies on internal file's structure and occurs even to fragmented files, where fragments can be:
+\begin{itemize} 
+\item not sequential
+\item out of order
+\item missing
+\end{itemize}
+Since basic carving does not consider the file's content the  attention has shifted to  advanced  carving methods. Header and footer are not enough to carve files becouse the file's content is not checked nor is sector within header/footer examined. Deeper knowledge of internal file's sctructure results in less false positives. 
+
+Authors of the paper present an advanced method that uses patteren-based file carving . It searches for metadata structures of inodes to recover their content data. This approach avoids reading the superblock and group descriptor table since its goal is to recover files from reformatted or corrupted ext4 file systems. The presented method can be divided into five phases\cite{merola2008data}:
+\begin{enumerate}
+\item Initialization
+\item Inode carving
+\item Directory tree
+\item Regular files
+\item Files without content
+\end{enumerate}
 
 \subsection{Related works}
 
