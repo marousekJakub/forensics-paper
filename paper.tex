@@ -1,5 +1,6 @@
 \documentclass{acm_proc_article-sp}
 \usepackage{graphicx}
+\usepackage{amsmath}
 \def\url#1{{\tt#1}}
 
 \begin{document}
@@ -151,15 +152,87 @@ Advanced carving relies on internal file's structure and occurs even to fragment
 \item out of order
 \item missing
 \end{itemize}
-Since basic carving does not consider the file's content the  attention has shifted to  advanced  carving methods. Header and footer are not enough to carve files becouse the file's content is not checked nor is sector within header/footer examined. Deeper knowledge of internal file's sctructure results in less false positives. 
+Since basic carving does not consider the file's content the  attention has shifted to  advanced  carving methods. Header and footer are not enough to carve files because the file's content is not checked nor is sector within header/footer examined. Deeper knowledge of internal file's structure results in less false positives. 
 
 Authors of the paper present an advanced method that uses patteren-based file carving . It searches for metadata structures of inodes to recover their content data. This approach avoids reading the superblock and group descriptor table since its goal is to recover files from reformatted or corrupted ext4 file systems. The presented method can be divided into five phases\cite{merola2008data}:
 \begin{enumerate}
-\item Initialization
-\item Inode carving
-\item Directory tree
-\item Regular files
-\item Files without content
+\item \textbf{Initialization}
+
+The point of initialization  is to gather Ext4 parameters, they can be estimated from the file system size. The following parameters are of relevance:
+\begin{itemize} 
+\item Offset
+\item File system size
+\item Block size
+\item Inode size
+\item Inode ratio
+\item Flex group size
+\item 64 bit mode
+\item Sparce superblock
+\item Number of blocks per block group
+\item Numbers of blocks and block groups in the file system
+\item Number of inodes per block group
+\item Space for growing group descriptor table
+\end{itemize}
+\item \textbf{Inode carving}
+
+Not every 128 byte permutation forms a valid inode. For an inode to be correct, some of the values must be in certain relations. This fact is used while searching for potential inode candidates in a byte wise manner. The most significant 4 bits in the 2 byte structure of inode indicate its file type.
+
+Search patterns can also be based on timestamps, such as time interval or its inner consistency. Creation date, modification date, deletion date timestamp consistency can be verified if the following conditions are true:
+\begin{itemize}
+\item Modification date\textless creation date
+\item Deletion date=0 and (deletion date\textgreater modification date and deletion date\textgreater creation date
+\item Modification, creation time and delete time must be valid
+\end{itemize}
+Extent header field must contain the statisticaly defined magic number 0xf30a. Other inode attributes can be used for search patterns. All found addresses of potential inodes are sorted by file type (regular files and directories) and used for recovery.
+\item \textbf{Directory tree}
+
+This phase tries to identify potential directory inodes. Directory entries are searched linearly where directories not strating with '.' or '..' are discarded. The file name and inode number are saved along with its parent inode number, therefore a logical tree forming the complete file path can be deducted.
+
+The module must map physical inode addresses to inode numbers. The beggining of the inode table can be computed by equation:
+
+\[s=(bg_a * n_{BG} +o_s + o_i +o_r)*b  \]
+The mapping of an address to its inode number is computed by:
+
+\[o_s=min \{1024, 1+ \left\lceil \frac{d*n_g+1024}{b} \right\rceil \} \]
+\[ o_s=2*n_f\]
+\begin{equation}
+  X=
+  \begin{cases}
+    0, & \text{if}\ b=1024 \\
+    1, & \text{otherwise}
+  \end{cases}
+\end{equation}
+\[bg_a=\left\lfloor \frac{a}{b*n_{BG}} \right\rfloor \]
+
+\[f(a)=(\frac{a-s}{i} +n_{i,BG} *bg_a +1) \]
+
+where:
+\begin{itemize}
+\item b block size
+
+\item $bg_a$ is block group of address a
+
+\item $n_{BG}$ is number of inodes per block group
+
+\item $o_s$ combined size of superblock, the group descriptor table and growth space
+
+\item $o_i$=2*$n_f$, offset where $n_f$ is flex group size
+
+\item $o_r$ first 1024 bytes of the file system are reserved independently of block size. This offset is in case the block size is 1024 and the reserved space takes whole block, shifting all addresses by one block 
+
+\item i size of inode 
+\end{itemize}
+
+The mapping from physical addresses to inode numbers can be done using these formulas. By using information from directory trees, file names can be associated to inodes. In case of a irreparable directory, its children's file paths can not be reconstructed therefore their content is saved in files named after their inode address. All recovered files are named after their inode address and saved into a flat hierarchy.
+
+
+
+\item \textbf{Regular files}
+
+Having reconstructed file path or not the content of a regular file is now recovered. Ext4 file system stores file content scattered across the volume in a way managed by the extents. Since the file system journal can contain copies of the existing inodes, duplicates with different physical addresses can be found. In order for two inodes to be the same, the file size and the extent structures are compared, due to the lack of inode numbers.
+\item \textbf{Files without content}
+
+This is another optional phase and builds on the results of the directory tree and content data phase. The content of files found in the directory tree phase but not in the inode carving phase, cannot be recovered, but their filepath can. Therefore files are created empty with their original filename and file path.
 \end{enumerate}
 
 \subsection{Related works}
