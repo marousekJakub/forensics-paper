@@ -43,7 +43,7 @@ Our work is organized in a following way: Section 1 is this introduction; Sectio
 
 The ext4 filesystem is the next generation in the family of ext filesystems, used typically in Linux environments. In the very beginning, the Linux kernel used Minix filesystem, due to the fact that Linux itself originated from Minix. This filesystem, however, contained serious limitations, the maximum file name size and the maximum filesystem size as the most severe examples. A group of kernel developers, with Theodore Ts'o being the most prominent one, introduced a couple of new filesystems \cite{ext2design}.
 
-The first new filesystem, ext (``extended file system'', released in 1992) removed the Minix limitations, but some of the previous problems remained -- for example, free blocks were monitored over a linked list, which harmed performance. As a quick response, ext2 (``second extended file system'', 1993) was released. While the code of ext2 originated in that of ext, it brought many notable improvements.
+The first new filesystem, ext (``extended filesystem'', released in 1992) removed the Minix limitations, but some of the previous problems remained -- for example, free blocks were monitored over a linked list, which harmed performance. As a quick response, ext2 (``second extended filesystem'', 1993) was released. While the code of ext2 originated in that of ext, it brought many notable improvements.
 
 \subsection{The ext2 filesystem}
 
@@ -70,13 +70,13 @@ The superblock and group descriptors contain information which are crucial for t
 
 As the main optimization, ext2 performs block readahead, that means, reads more continguous blocks at once. Block groups try to keep together inodes and blocks of a file, which reduces disk seeks. Also when a file is being written, ext2 preallocates up to 8 blocks.
 
-\subsection{The ext3 file system}
+\subsection{The ext3 filesystem}
 
-After the initial period of bugs elimination, the ext2 file system has become a safe, stable choice for a Linux-based operating system. One of the main drawbacks of using ext2 is the lack of jounrnaling, which slows down the file system check and makes files prone to corruption.
+After the initial period of bugs elimination, the ext2 filesystem has become a safe, stable choice for a Linux-based operating system. One of the main drawbacks of using ext2 is the lack of jounrnaling, which slows down the filesystem check and makes files prone to corruption.
 
-First suggestions for the journaling of ext file system family were put down by Stephen C.\ Tweedie \cite{extjournal}. He identifies several aspects of file system reliability and puts forward {\it preservation} (``stable'' data on the disk should never be damaged), {\it predictability} (the failure modes of the file system should be predictable and deterministic) and {\it atomicity} (every operation is either fully performed or fully undone). The ext2 provided only the preservation aspect, whilst the failure states (could occur because of an unexpected reboot, for example) were not properly defined and might have prevented the operations from fully performing.
+First suggestions for the journaling of ext filesystem family were put down by Stephen C.\ Tweedie \cite{extjournal}. He identifies several aspects of filesystem reliability and puts forward {\it preservation} (``stable'' data on the disk should never be damaged), {\it predictability} (the failure modes of the filesystem should be predictable and deterministic) and {\it atomicity} (every operation is either fully performed or fully undone). The ext2 provided only the preservation aspect, whilst the failure states (could occur because of an unexpected reboot, for example) were not properly defined and might have prevented the operations from fully performing.
 
-The Tweedie's article \cite{extjournal} compares approaches of reaching the desired aspects. The easiest way is to wait for a disk write to complete before the next one is submitted, which breaks the performance. Another idea lies in preserving multiple write buffers, ordering them accordingly and write these separately. However, one can easily get into a situation when the buffer dependendence is cyclic (moving a file from directory $A$ to directory $B$ and, in the same time, moving another file from $B$ to $A$). While there exists a mechanism to solve it, all the presented approaches require the disk to be completely rescanned for errors in case of a system failure. (Recall that file system check slowness was one of main objections against ext2.)
+The Tweedie's article \cite{extjournal} compares approaches of reaching the desired aspects. The easiest way is to wait for a disk write to complete before the next one is submitted, which breaks the performance. Another idea lies in preserving multiple write buffers, ordering them accordingly and write these separately. However, one can easily get into a situation when the buffer dependendence is cyclic (moving a file from directory $A$ to directory $B$ and, in the same time, moving another file from $B$ to $A$). While there exists a mechanism to solve it, all the presented approaches require the disk to be completely rescanned for errors in case of a system failure. (Recall that filesystem check slowness was one of main objections against ext2.)
 
 Instead, the author proposes to use {\it journaling}. To ensure operations to be atomic, a batch of data is written on the disk, but is not effective until a special {\it commit} block does not conclude the operation. Thus, a failure during performing the write can result only in two possibilities: either the commit block has been written on the disk, which means the transaction is complete, or it has not been written, in which case the transaction as a whole is undone. More practically: there is a dedicated place on the disk, called a {\it journal}, working as a cycling buffer. A transaction starts with a description block, continues with all the blocks that the transaction is modifying, and end with a commit block. Only after all these blocks have been successfully written to the journal, the ``real'' blocks modification is done. If a failure of the system occurs, the recovery program goes through the journal and performs all transactions which contain the commit block. If the block is not present, the transaction is discarded.
 
@@ -86,7 +86,7 @@ Instead, the author proposes to use {\it journaling}. To ensure operations to be
 	\caption{The structure of ext3 journal \cite{takingadvantage}}
 \end{figure}
 
-The ext3 file system, released in 2001, i offers three different modes of journaling: \cite{takingadvantage}
+The ext3 filesystem, released in 2001, i offers three different modes of journaling: \cite{takingadvantage}
 
 \begin{itemize}
 	\item {\it Journal} -- All data and matadata are logged. This approach minimizes the chance of losing data, but has the laregst performance penalty.
@@ -97,11 +97,11 @@ The ext3 file system, released in 2001, i offers three different modes of journa
 Notice that journaling cannot be turned off. Compared to ext2, this is the only different feature. Thanks to this, it is possible to convert an ext2 partition to ext3 with spawning a single command.
 For the period of ext3 development, a principle of both backward and forward compatibility with ext2 was closely followed by its authors. Therefore, an ext3 partition can be mounted with ext2 driver and works the same with the exception of journaling. Turning off a journal causes an ext3 partition to become ext2 and vice versa.
 
-\subsection{The ext4 file system}
+\subsection{The ext4 filesystem}
 
-Although ext3 was a step forward, it still lacked some state-of-the-art features, which could be found in other Unix filesystems. Between 2003 and 2006, numberous patches for the ext3 were proposed to be added to the Linux kernel, but they were not accepted because the Linux community was afraid of stability of their mostly-used-file system at that time. As a result, Theodore Ts'o introducted plans for creating a successor of ext3, which would partially break the forward compatibility, but still allowed an easy update from the older versions \cite{newext4}. In 2008, the code was marked as stable.
+Although ext3 was a step forward, it still lacked some state-of-the-art features, which could be found in other Unix filesystems. Between 2003 and 2006, numberous patches for the ext3 were proposed to be added to the Linux kernel, but they were not accepted because the Linux community was afraid of stability of their mostly-used-filesystem at that time. As a result, Theodore Ts'o introducted plans for creating a successor of ext3, which would partially break the forward compatibility, but still allowed an easy update from the older versions \cite{newext4}. In 2008, the code was marked as stable.
 
-A large amount work was done in terms of scalability. The maximum size of the file system was raised to 1 EB, the maximum size of a file is raised to 2 TB. The maximum number of files is increased too.
+A large amount work was done in terms of scalability. The maximum size of the filesystem was raised to 1 EB, the maximum size of a file is raised to 2 TB. The maximum number of files is increased too.
 
 A compatibility-breaking change of file block locations is brought up. Instead of storing a list of data blocks (which is advantageous for small files but unpractical for large ones), {\it extents} are introduced. An extent is a range of data blocks, where all blocks in the range belong to the file. Four extents can be directly stored in the inode of the file. For large and fragmented files, a tree of pointers is maintained, with extents being in the leaves.
 
@@ -113,25 +113,25 @@ A compatibility-breaking change of file block locations is brought up. Instead o
 
 The transactions in the journal are checksummed in the commit block, making two consequences: the recovery is more reliable as the corrupted transaction blocks are detected and the transaction cancelled; also now the commit block can be written in the same time as the other blocks, which significantly improves the performance.
 
-Contrary to ext4, persistent pre-allocation of file size is possible. The checking of the file system is 2 to 20 times 2 to 20 times faster, as the unallocated inodes are marked and are skipped during the rest of the procedure. Instead of allocating one block at a time, the allocation is {\it delayed} in ext4, meaning it is postponed in time and performed when the file is flushed. There is also a possibility of online defragmentation. Since the size of an inode is larger, nanosecond resolution timestamps are supported and the problem of year 2038 is deferred for 272 years.
+Contrary to ext4, persistent pre-allocation of file size is possible. The checking of the filesystem is 2 to 20 times 2 to 20 times faster, as the unallocated inodes are marked and are skipped during the rest of the procedure. Instead of allocating one block at a time, the allocation is {\it delayed} in ext4, meaning it is postponed in time and performed when the file is flushed. There is also a possibility of online defragmentation. Since the size of an inode is larger, nanosecond resolution timestamps are supported and the problem of year 2038 is deferred for 272 years.
 
 Similarly as in the case of ext2 and ext3, migrating to ext4 is just a matter of turning on the new features. The legacy system of individual block mapping is preserved, but all new files will use extents. Downgrading from ext4 to ext3 by turning off the features is straightforward when extents are not used -- otherwise, temporary copy of the files is needed.
 
-\subsection{Comparison of ext4 and other Unix file systems}
+\subsection{Comparison of ext4 and other Unix filesystems}
 
 It is worth noting that Theodore Ts'o considered ext4 not to be a major advance and still using old technology. In the light of his words, I found potentially interesting to list other popular Unix filesystems and compare their functions.
 
-{\it Btrfs} \cite{btrfs} is a file system brought to life by Oracle. The development began in 2007 and the software was proclaimed to be stable in 2014. The name comes from the B-tree as this is the main structure used within the file system. Notable features of Btrfs are copy-on-write (a copied and unmodified file references to the ``old data''), snapshots, CRC checksums of data, RAID or configurable compression. In order to prolong the lifespan, SSD drivers are handled specifically. In-place conversion from ext2/3/4 and ReiserFS is present.
+{\it Btrfs} \cite{btrfs} is a filesystem brought to life by Oracle. The development began in 2007 and the software was proclaimed to be stable in 2014. The name comes from the B-tree as this is the main structure used within the filesystem. Notable features of Btrfs are copy-on-write (a copied and unmodified file references to the ``old data''), snapshots, CRC checksums of data, RAID or configurable compression. In order to prolong the lifespan, SSD drivers are handled specifically. In-place conversion from ext2/3/4 and ReiserFS is present.
 
-{\it ReiserFS} was created by company Namesys with Hans Reiser as the chief developer. When the first version was released in 2001, it brought attention because of features which had been unavailable, like journaling, online filesystem resizing, packing files in a single disk block or B-tree usage. Although ReiserFS was popular in the past, it was overtaken by other file systems since then. The main reason may be the slow pace of development, especially after Hans Reiser has been imprisoned and convicted of murder.
+{\it ReiserFS} was created by company Namesys with Hans Reiser as the chief developer. When the first version was released in 2001, it brought attention because of features which had been unavailable, like journaling, online filesystem resizing, packing files in a single disk block or B-tree usage. Although ReiserFS was popular in the past, it was overtaken by other filesystems since then. The main reason may be the slow pace of development, especially after Hans Reiser has been imprisoned and convicted of murder.
 
 {\it ZFS} \cite{zfs} was developed by Oracle, but after the end of support the project was handled to the open-source community \cite{openzfs}. It supports journaling, read-only snaphots of the files state, RAID or checksums of files. On Ubuntu, ZFS has been chosen as the default filesystem for containers.
 
 \section{File carving in ext4}
 
-File carving, or sometimes just "carving" is the process of extracting data collection from a larger data set. Digital investigation often include data carving techniques when unallocated file system space is analysed to extract files. These files are carved from the unallocated space using file type-specific header and footer values\cite{merola2008data}.
+File carving, or sometimes just "carving" is the process of extracting data collection from a larger data set. Digital investigation often include data carving techniques when unallocated filesystem space is analysed to extract files. These files are carved from the unallocated space using file type-specific header and footer values\cite{merola2008data}.
 
-File carving is not the same as file recovery. File recovery techniques rely on the file system information that remains after the deletion of a file to recover those files. On the other hand file carving techniques are used to restore as much data or data fragments as possible, when the file system is corrupted or deleted. Carving or raw data recovery process does not rely on the file system structures. It searches block by block for data matching the specific file type header and footer values\cite{beek2011introduction}. 
+File carving is not the same as file recovery. File recovery techniques rely on the filesystem information that remains after the deletion of a file to recover those files. On the other hand file carving techniques are used to restore as much data or data fragments as possible, when the filesystem is corrupted or deleted. Carving or raw data recovery process does not rely on the filesystem structures. It searches block by block for data matching the specific file type header and footer values\cite{beek2011introduction}. 
 
 In digital forensics carving is especially useful in criminal cases, becouse it can recover evidence. As long as data on a disk is not overwritten or wiped, it can be restored using file carving techniques. Sometimes even data from formatted drives can be restored if the conditions are right. The most common general techniques to carve files are\cite{hadi2016reviewing}:
 
@@ -156,14 +156,14 @@ Advanced carving relies on internal file's structure and occurs even to fragment
 \end{itemize}
 Since basic carving does not consider the file's content the  attention has shifted to  advanced  carving methods. Header and footer are not enough to carve files because the file's content is not checked nor is sector within header/footer examined. Deeper knowledge of internal file's structure results in less false positives. 
 
-Authors of the paper present an advanced method that uses patteren-based file carving . It searches for metadata structures of inodes to recover their content data. This approach avoids reading the superblock and group descriptor table since its goal is to recover files from reformatted or corrupted ext4 file systems. The presented method can be divided into five phases\cite{dewald2017afeic}:
+Authors of the paper present an advanced method that uses patteren-based file carving . It searches for metadata structures of inodes to recover their content data. This approach avoids reading the superblock and group descriptor table since its goal is to recover files from reformatted or corrupted ext4 filesystems. The presented method can be divided into five phases\cite{dewald2017afeic}:
 \begin{enumerate}
 \item \textbf{Initialization}
 
-The point of initialization  is to gather Ext4 parameters, they can be estimated from the file system size. The following parameters are of relevance:
+The point of initialization  is to gather Ext4 parameters, they can be estimated from the filesystem size. The following parameters are of relevance:
 \begin{itemize} 
 \item Offset
-\item File system size
+\item filesystem size
 \item Block size
 \item Inode size
 \item Inode ratio
@@ -171,7 +171,7 @@ The point of initialization  is to gather Ext4 parameters, they can be estimated
 \item 64 bit mode
 \item Sparce superblock
 \item Number of blocks per block group
-\item Numbers of blocks and block groups in the file system
+\item Numbers of blocks and block groups in the filesystem
 \item Number of inodes per block group
 \item Space for growing group descriptor table
 \end{itemize}
@@ -220,7 +220,7 @@ where:
 
 \item $o_i$=2*$n_f$, offset where $n_f$ is flex group size
 
-\item $o_r$ first 1024 bytes of the file system are reserved independently of block size. This offset is in case the block size is 1024 and the reserved space takes whole block, shifting all addresses by one block 
+\item $o_r$ first 1024 bytes of the filesystem are reserved independently of block size. This offset is in case the block size is 1024 and the reserved space takes whole block, shifting all addresses by one block 
 
 \item i size of inode 
 \end{itemize}
@@ -231,7 +231,7 @@ The mapping from physical addresses to inode numbers can be done using these for
 
 \item \textbf{Regular files}
 
-Having reconstructed file path or not the content of a regular file is now recovered. Ext4 file system stores file content scattered across the volume in a way managed by the extents. Since the file system journal can contain copies of the existing inodes, duplicates with different physical addresses can be found. In order for two inodes to be the same, the file size and the extent structures are compared, due to the lack of inode numbers.
+Having reconstructed file path or not the content of a regular file is now recovered. Ext4 filesystem stores file content scattered across the volume in a way managed by the extents. Since the filesystem journal can contain copies of the existing inodes, duplicates with different physical addresses can be found. In order for two inodes to be the same, the file size and the extent structures are compared, due to the lack of inode numbers.
 \item \textbf{Files without content}
 
 This is another optional phase and builds on the results of the directory tree and content data phase. The content of files found in the directory tree phase but not in the inode carving phase, cannot be recovered, but their filepath can. Therefore files are created empty with their original filename and file path.
@@ -243,15 +243,15 @@ In the previous sections, an approach for reconstructing inodes was introduced. 
 
 \subsection{Dataset}
 
-They have built a dataset with different hard disk images to evaluate their approach and Sleuthkit implementation of the tool. They have used different file system sizes to cover different configurations that can occur when formatting disks of different sizes with default values. 
-Further, they have built test cases where they deleted specific files or changed file system parameters that might influence the success of the approach.
+They have built a dataset with different hard disk images to evaluate their approach and Sleuthkit implementation of the tool. They have used different filesystem sizes to cover different configurations that can occur when formatting disks of different sizes with default values. 
+Further, they have built test cases where they deleted specific files or changed filesystem parameters that might influence the success of the approach.
 They distinguished two for images where they have deleted files:
 \begin{itemize}
 \item files that have been deleted directly
 \item files that have been deleted by moving to the trash first.
 \end{itemize}
-They also made a case where they deleted all files and copied new ones on the file system to check if the former files can be recovered.
-Further, they compared Ext4 file systems with enabled and
+They also made a case where they deleted all files and copied new ones on the filesystem to check if the former files can be recovered.
+Further, they compared Ext4 filesystems with enabled and
 disabled journal and deleted files. To create a more realistic
 example image, they created one that contains an entire Ubuntu
 Linux installation with various files that have been moved, deleted
@@ -265,7 +265,7 @@ In the paper, they checked, how well the different patterns perform.
 To test this, they choose the image with installed Ubuntu and various cases. They used the Sleuthkit tool fsstat to provide a ground truth about the number of reserved inodes.
 Considering the first 10 inodes to be reserved, there remained 201.269 files, of which they checked how many are regular files and directories.
 
-Each pattern was tested on each physical address and can accept or decline this address as potential inode. Accepted addresses that lie within an area of an inode table at a valid offset and can be reconstructed successfully are listed as hits in the table. This is the total number of files in the file system. Table misses are structures that might be a valid inode, but reside outside an inode table. Those could be false positives, but could also be copies of inodes for example in the file system journal. Similarly, address misses are potential inode addresses that do not lie at a 128 byte inode boundary.
+Each pattern was tested on each physical address and can accept or decline this address as potential inode. Accepted addresses that lie within an area of an inode table at a valid offset and can be reconstructed successfully are listed as hits in the table. This is the total number of files in the filesystem. Table misses are structures that might be a valid inode, but reside outside an inode table. Those could be false positives, but could also be copies of inodes for example in the filesystem journal. Similarly, address misses are potential inode addresses that do not lie at a 128 byte inode boundary.
 
 Misses do not necessarily mean false positives, so they are not rejected at the first place. The number of accepted addresses for the pattern is the sum of t-misses and a-misses, while the selectivity of each pattern is the number compared to the total number of possible addresses.
 
@@ -318,7 +318,7 @@ In this experiment, 3 most restrictive patterns were the extent headers, timesta
 
 To evaluate completeness and correctness of the tool, both operation modes of the tool were testet and compared. Correct recovery was checked with MD5 and SHA256 hashes. In the contentdata mode, the files need to be reconstructed with the correct values, while in the metadata mode also the file name and path have to be correct, in order to consider correct recovery.
 
-The authors of the research evaluated two images of different categories. First, they evaluated the tool on the real case images to verify correctness and completeness by comparing the results of the tool the known ground truth. Second, they wanted to evaluate, whether they can recover files from file system that have been overformatted.
+The authors of the research evaluated two images of different categories. First, they evaluated the tool on the real case images to verify correctness and completeness by comparing the results of the tool the known ground truth. Second, they wanted to evaluate, whether they can recover files from filesystem that have been overformatted.
 
 \subsection{Real world cases}
 
@@ -329,14 +329,14 @@ They created one image by sending all files on the image to trash. The trash con
 
 In the next step, they emptied that trash. In metadata mode, the tool only recovered the empty root and trash folder. But in the contentdata mode, all files were reconstructed correctly, just without original file names. 
 
-They went further and they deleted all files from images with sending them to trash and emptying it. After that they copied new files to the resulting new images. The metadata mode recovered all newly written files correctly from all images. The contentdata mode was also able to recover one file form the original file system, whose file content had not been overwritten by new files. Its inode resided in the old journal.
+They went further and they deleted all files from images with sending them to trash and emptying it. After that they copied new files to the resulting new images. The metadata mode recovered all newly written files correctly from all images. The contentdata mode was also able to recover one file form the original filesystem, whose file content had not been overwritten by new files. Its inode resided in the old journal.
 
 
-\subsection{Overformatted file systems}
+\subsection{Overformatted filesystems}
 
 In this section, the evaluation, if it is possible to reconstruct files from Ext4 that have been overformatted in different ways, is given. The researchers evaluated this on small image, which provided an upper boundary of what files can be reconstructed.
 
-They overformatted the original file with Ext4 and NTFS file systems in full formatting mode. In those cases, the blocks had been zeroed and they were not able to recover any files. Ext4 as well as NTFS provide an option for so called fast formatting, where no blocks are zeroed while formatting and only newly used blocks are overwritten.
+They overformatted the original file with Ext4 and NTFS filesystems in full formatting mode. In those cases, the blocks had been zeroed and they were not able to recover any files. Ext4 as well as NTFS provide an option for so called fast formatting, where no blocks are zeroed while formatting and only newly used blocks are overwritten.
 
 The image \texttt{small\_fastExt4.img} 
  had been created by using the same default parameters when overformatting the volume as used for the original formatting. The tool recovered all but 3 of the original files and all but 2 folders in the metadata mode, while in the contentdata mode it additionally recovered the journal from inode 8 as a file.
@@ -346,9 +346,9 @@ In \texttt{small\_fastdiffExt4.img} non-default parameters had been used
 
 In the image 
 \texttt{small\_fastNTFS.img}
-, the structures that had been created for the NTFS file system, did not overwrite the area of the original inode tables and both operation modes were able to recover all the original files, of which only some had modified content and some blocks had been used by the new file system.
+, the structures that had been created for the NTFS filesystem, did not overwrite the area of the original inode tables and both operation modes were able to recover all the original files, of which only some had modified content and some blocks had been used by the new filesystem.
 
-Table 3 lists the number of found inodes and files from the fast overformatted file systems and compared results from both modes of the tool.
+Table 3 lists the number of found inodes and files from the fast overformatted filesystems and compared results from both modes of the tool.
 
 \begin{table}
 \centering
