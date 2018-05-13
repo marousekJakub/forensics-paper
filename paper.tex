@@ -127,11 +127,11 @@ It is worth noting that Theodore Ts'o considered ext4 not to be a major advance 
 
 \subsection{File carving}
 
-File carving, or sometimes just "carving" is the process of extracting data collection from a larger data set. Digital investigation often include data carving techniques when unallocated file system space is analysed to extract files. These files are carved from the unallocated space using file type-specific header and footer values.
+File carving, or sometimes just "carving" is the process of extracting data collection from a larger data set. Digital investigation often include data carving techniques when unallocated file system space is analysed to extract files. These files are carved from the unallocated space using file type-specific header and footer values\cite{merola2008data}.
 
-File carving is not the same as file recovery. File recovery techniques rely on the file system information that remains after the deletion of a file to recover those files. On the other hand file carving techniques are used to restore as much data or data fragments as possible, when the file system is corrupted or deleted. Carving or raw data recovery process does not rely on the file system structures. It searches block by block for data matching the specific file type header and footer values. 
+File carving is not the same as file recovery. File recovery techniques rely on the file system information that remains after the deletion of a file to recover those files. On the other hand file carving techniques are used to restore as much data or data fragments as possible, when the file system is corrupted or deleted. Carving or raw data recovery process does not rely on the file system structures. It searches block by block for data matching the specific file type header and footer values\cite{beek2011introduction}. 
 
-In digital forensics carving is especially useful in criminal cases, becouse it can recover evidence. As long as data on a disk is not overwritten or wiped, it can be restored using file carving techniques. Sometimes even data from formatted drives can be restored if the conditions are right. The most common general techniques to carve files are:
+In digital forensics carving is especially useful in criminal cases, becouse it can recover evidence. As long as data on a disk is not overwritten or wiped, it can be restored using file carving techniques. Sometimes even data from formatted drives can be restored if the conditions are right. The most common general techniques to carve files are\cite{hadi2016reviewing}:
 
 \begin{itemize}
 \item \textbf{File Structure Based carving}
@@ -154,7 +154,7 @@ Advanced carving relies on internal file's structure and occurs even to fragment
 \end{itemize}
 Since basic carving does not consider the file's content the  attention has shifted to  advanced  carving methods. Header and footer are not enough to carve files because the file's content is not checked nor is sector within header/footer examined. Deeper knowledge of internal file's structure results in less false positives. 
 
-Authors of the paper present an advanced method that uses patteren-based file carving . It searches for metadata structures of inodes to recover their content data. This approach avoids reading the superblock and group descriptor table since its goal is to recover files from reformatted or corrupted ext4 file systems. The presented method can be divided into five phases\cite{merola2008data}:
+Authors of the paper present an advanced method that uses patteren-based file carving . It searches for metadata structures of inodes to recover their content data. This approach avoids reading the superblock and group descriptor table since its goal is to recover files from reformatted or corrupted ext4 file systems. The presented method can be divided into five phases\cite{dewald2017afeic}:
 \begin{enumerate}
 \item \textbf{Initialization}
 
