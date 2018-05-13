@@ -28,7 +28,7 @@
 
 \maketitle
 \begin{abstract}
-Many widely-used filesystems (NTFS, FAT, Ext3) are well-researched in terms of digital forensics and data recovery, but this does not apply to Ext4, a successor in the family of ext filesystems. Due to some new functionalities of Ext4 and compatibility breaking, a novel approach for file carving had to developed. The advantages of this approach include its ability to restore files even in the case of a corrupted superblock. This article gives a summary of the original paper and its outcomes, also with an introduction to Ext4 filesystem and ext family included.
+Many widely-used filesystems (NTFS, FAT, Ext3) are well-researched in terms of digital forensics and data recovery, but this does not apply to Ext4, a successor in the family of ext filesystems. Due to some new functionalities of Ext4 and compatibility breaking, a novel approach for file carving had to developed. The advantages of this approach include its ability to restore files even in the case of a corrupted superblock. This article gives a summary of the original paper and its outcomes, also with an introduction to Ext4 filesystem and Ext family included.
 \end{abstract}
 
 \section{Introduction}
@@ -39,11 +39,11 @@ This article provides a summary of the paper \cite{afeic}. But since the method 
 
 Our work is organized in a following way: Section 1 is this introduction; Section 2 provides the description of the filesystems; Section 3 is the summary of the paper; in Section 4 results of the evaluation are described; and Section 5 is the conclusion.
 
-\section{Introduction to ext filesystem family}
+\section{Introduction to Ext filesystem family}
 
-The Ext4 filesystem is the next generation in the family of ext filesystems, used typically in Linux environments. In the very beginning, the Linux kernel used Minix filesystem, due to the fact that Linux itself originated from Minix. This filesystem, however, contained serious limitations, the maximum file name size and the maximum filesystem size as the most severe examples. A group of kernel developers, with Theodore Ts'o being the most prominent one, introduced a couple of new filesystems \cite{ext2design}.
+The Ext4 filesystem is the next generation in the family of Ext filesystems, used typically in Linux environments. In the very beginning, the Linux kernel used Minix filesystem, due to the fact that Linux itself originated from Minix. This filesystem, however, contained serious limitations, the maximum file name size and the maximum filesystem size as the most severe examples. A group of kernel developers, with Theodore Ts'o being the most prominent one, introduced a couple of new filesystems \cite{ext2design}.
 
-The first new filesystem, Ext (``extended filesystem'', released in 1992) removed the Minix limitations, but some of the previous problems remained -- for example, free blocks were monitored over a linked list, which harmed performance. As a quick response, Ext2 (``second extended filesystem'', 1993) was released. While the code of Ext2 originated in that of ext, it brought many notable improvements.
+The first new filesystem, Ext (``extended filesystem'', released in 1992) removed the Minix limitations, but some of the previous problems remained -- for example, free blocks were monitored over a linked list, which harmed performance. As a quick response, Ext2 (``second extended filesystem'', 1993) was released. While the code of Ext2 originated in that of Ext, it brought many notable improvements.
 
 \subsection{The Ext2 filesystem}
 
