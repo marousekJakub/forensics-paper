@@ -28,22 +28,24 @@
 
 \maketitle
 \begin{abstract}
-Place an abstract here.
+Many widely-used filesystems (NTFS, FAT, ext3) are well-researched in terms of digital forensics and data recovery, but this does not apply to ext4, a successor in the family of ext filesystems. Due to some new functionalities of ext4 and compatibility breaking, a novel approach for file carving had to developed. The advantages of this approach include its ability to restore files even in the case of a corrupted superblock. This article gives a summary of the original paper and its outcomes, also with an introduction to ext4 filesystem and ext family included.
 \end{abstract}
 
 \section{Introduction}
 
-\cite{braams:babel}
+In the present, ext4 is a widely-used filesystem, especially on Linux-based operating systems and Android phones \cite{afeic}. The filesystem, released in 2008, has its origins in ext2 and ext3 filesystems. While many of their principles and structures were preserved (it is possible to upgrade from ext2 or ext3 in-place by setting new attributes), the changes are not just evolutionary. The way of storing and locating data blocks has changed, especially with the introduction of {\it extents}. From the forensical point of view, it was necessary to come up with new processes of recovering data.
 
-\section{The {\secit Body} of The Paper}
+This article provides a summary of the paper \cite{afeic}. But since the method is not easily understandable without wider information about ext4 way of working, we include here a description of the filesystem. Furthermore, a description of ext2 and ext3 must be also attached, as ext4 is closely tied to them and succeeds their functions.
 
-\subsection{Introduction to ext4}
+Our work is organized in a following way: Section 1 is this introduction; Section 2 provides the description of the filesystems; Section 3 is the summary of the paper; in Section 4 results of the evaluation are described; and Section 5 is the conclusion.
+
+\section{Introduction to ext filesystem family}
 
 The ext4 filesystem is the next generation in the family of ext filesystems, used typically in Linux environments. In the very beginning, the Linux kernel used Minix filesystem, due to the fact that Linux itself originated from Minix. This filesystem, however, contained serious limitations, the maximum file name size and the maximum filesystem size as the most severe examples. A group of kernel developers, with Theodore Ts'o being the most prominent one, introduced a couple of new filesystems \cite{ext2design}.
 
 The first new filesystem, ext (``extended file system'', released in 1992) removed the Minix limitations, but some of the previous problems remained -- for example, free blocks were monitored over a linked list, which harmed performance. As a quick response, ext2 (``second extended file system'', 1993) was released. While the code of ext2 originated in that of ext, it brought many notable improvements.
 
-\subsubsection{The ext2 filesystem}
+\subsection{The ext2 filesystem}
 
 The filesystem supports standard Unix file types: regular files, directories, device-special files and links. The maximum size of a file is 2 GB, the maximum size of the whole filesystem is 4 TB.
 As the other Unix filesystems, it also uses inodes for storing file metadata. An {\it inode} is a structure containing a description of a file: file type, access rights, owners, timestamps, size, pointers to data blocks.
@@ -68,7 +70,7 @@ The superblock and group descriptors contain information which are crucial for t
 
 As the main optimization, ext2 performs block readahead, that means, reads more continguous blocks at once. Block groups try to keep together inodes and blocks of a file, which reduces disk seeks. Also when a file is being written, ext2 preallocates up to 8 blocks.
 
-\subsubsection{The ext3 file system}
+\subsection{The ext3 file system}
 
 After the initial period of bugs elimination, the ext2 file system has become a safe, stable choice for a Linux-based operating system. One of the main drawbacks of using ext2 is the lack of jounrnaling, which slows down the file system check and makes files prone to corruption.
 
@@ -95,7 +97,7 @@ The ext3 file system, released in 2001, i offers three different modes of journa
 Notice that journaling cannot be turned off. Compared to ext2, this is the only different feature. Thanks to this, it is possible to convert an ext2 partition to ext3 with spawning a single command.
 For the period of ext3 development, a principle of both backward and forward compatibility with ext2 was closely followed by its authors. Therefore, an ext3 partition can be mounted with ext2 driver and works the same with the exception of journaling. Turning off a journal causes an ext3 partition to become ext2 and vice versa.
 
-\subsubsection{The ext4 file system}
+\subsection{The ext4 file system}
 
 Although ext3 was a step forward, it still lacked some state-of-the-art features, which could be found in other Unix filesystems. Between 2003 and 2006, numberous patches for the ext3 were proposed to be added to the Linux kernel, but they were not accepted because the Linux community was afraid of stability of their mostly-used-file system at that time. As a result, Theodore Ts'o introducted plans for creating a successor of ext3, which would partially break the forward compatibility, but still allowed an easy update from the older versions \cite{newext4}. In 2008, the code was marked as stable.
 
@@ -115,7 +117,7 @@ Contrary to ext4, persistent pre-allocation of file size is possible. The checki
 
 Similarly as in the case of ext2 and ext3, migrating to ext4 is just a matter of turning on the new features. The legacy system of individual block mapping is preserved, but all new files will use extents. Downgrading from ext4 to ext3 by turning off the features is straightforward when extents are not used -- otherwise, temporary copy of the files is needed.
 
-\subsubsection{Comparison of ext4 and other Unix file systems}
+\subsection{Comparison of ext4 and other Unix file systems}
 
 It is worth noting that Theodore Ts'o considered ext4 not to be a major advance and still using old technology. In the light of his words, I found potentially interesting to list other popular Unix filesystems and compare their functions.
 
@@ -125,7 +127,7 @@ It is worth noting that Theodore Ts'o considered ext4 not to be a major advance 
 
 {\it ZFS} \cite{zfs} was developed by Oracle, but after the end of support the project was handled to the open-source community \cite{openzfs}. It supports journaling, read-only snaphots of the files state, RAID or checksums of files. On Ubuntu, ZFS has been chosen as the default filesystem for containers.
 
-\subsection{File carving}
+\section{File carving in ext4}
 
 File carving, or sometimes just "carving" is the process of extracting data collection from a larger data set. Digital investigation often include data carving techniques when unallocated file system space is analysed to extract files. These files are carved from the unallocated space using file type-specific header and footer values\cite{merola2008data}.
 
@@ -235,11 +237,11 @@ Having reconstructed file path or not the content of a regular file is now recov
 This is another optional phase and builds on the results of the directory tree and content data phase. The content of files found in the directory tree phase but not in the inode carving phase, cannot be recovered, but their filepath can. Therefore files are created empty with their original filename and file path.
 \end{enumerate}
 
-\subsection{Evaluation of the proposed tool}
+\section{Evaluation of the method}
 
 In the previous sections, an approach for reconstructing inodes was introduced. It is based on search patterns of different inode attributes. All inodes that match the patterns are considered potential inodes. Using their extent tree, the file content can be reconstructed. In this section, we present an evaluation of the quality of each search pattern and also the completeness and correctness of presented tool. It was firstly introduced in the 2017 paper by A. Dewald and S. Seufert \cite{afeic}.
 
-\textit{Dataset}
+\subsection{Dataset}
 
 They have built a dataset with different hard disk images to evaluate their approach and Sleuthkit implementation of the tool. They have used different file system sizes to cover different configurations that can occur when formatting disks of different sizes with default values. 
 Further, they have built test cases where they deleted specific files or changed file system parameters that might influence the success of the approach.
@@ -257,7 +259,7 @@ and modified and also containing symbolic links, device files and
 other non-regular file types to cover a broad spectrum.
 At the end, they created images where they overformatted the existing Ext4 with NTFS or again Ext4. For each of those cases, they compared standard and quick formatting. The dataset contained mostly small images.
 
-\textit{Search patterns and selectivity}
+\subsection{Search patterns and selectivity}
 
 In the paper, they checked, how well the different patterns perform. 
 To test this, they choose the image with installed Ubuntu and various cases. They used the Sleuthkit tool fsstat to provide a ground truth about the number of reserved inodes.
@@ -278,7 +280,7 @@ Table 1 shows the number of identified potential inodes for each pattern. 'k' st
 
 In the following sections, we discuss the results for each pattern in detail.
 
-\textit{Access rights}
+\subsubsection{Access rights}
 
 While there is no illegal combination for access rights, a search pattern can be defined to search for files with specific rights or to cover the most common access right combinations. In the configuration file of the proposed tool, the pattern can be adjusted. For the experiment, they choose the most common combinations of access rights in Linux systems. They are shown in table 2
 This pattern accepted only 142.855 valid inodes out of 201.269.  However, this contained almost all regular files and folders.
@@ -289,36 +291,36 @@ This pattern accepted only 142.855 valid inodes out of 201.269.  However, this c
 	\caption{Access rights patterns chosen for the experiment}
 \end{table}
 
-\textit{Timestamps}
+\subsubsection{Timestamps}
 
 The timestamp pattern consists of two parts: firstly, they validated the inner consistency of the different timestamps, and in the second part, the investigator might configure a relevant timeframe for his case. For this experiment they choose the timeframe from 2015-01-01 00:00:00 GMT to 2016-01-01 00:00:00 GMT, in which the system was set up and all actions have been performed. Amongst the potential inodes have been 7.140 false positives, so that the number of hits was reduced to 65.170.
 
 With respect to only the inner consistency, they obtained 209.481 hits, 5.708.816 t-misses and 1.416.653.929 a-misses. 8.213 of the hits have been identified as false positives, however, all other valid 201.264 have been found.
 
-\textit{Number of hard links}
+\subsubsection{Number of hard links}
 
 In the paper, they have checked whether the internal number of hard link counter of a potential inode is larger then 0. All 201.269 potential inodes were accepted by this, beside special inodes 7 and 8, which are counted as false positives.
 
-\textit{Extent flag and header}
+\subsubsection{Extent flag and header}
 
 Researchers evaluated the pattern for the extent flag and extent headers separately. The selectivity of the second header is very high, because of the 2 byte magic number. Its pattern is the only pattern, that produces far more table misses that address misses. This pattern also matches various content data blocks. However, all regular files and folder have been accepted by this pattern, along with 8.074 false positives. 
 Also, inodes of deleted files are accepted by this pattern too. 
 
-\textit{File type}
+\subsubsection{File type}
 
 The authors of the paper were restricted only to regular files and folders, so they adjusted the file type pattern accordingly. Besides 8.068 false positives, this pattern matches on all 142.919 inodes they searched for.
 
-\textit{Pattern combination}
+\subsubsection{Pattern combination}
 
 In this experiment, 3 most restrictive patterns were the extent headers, timestamp intervals and access rights. Last two include some semantic filtering, so researchers did not include them in the next experiments to verify correctness of the tool.
 
-\textit{Completeness and correctness}
+\subsubsection{Completeness and correctness}
 
 To evaluate completeness and correctness of the tool, both operation modes of the tool were testet and compared. Correct recovery was checked with MD5 and SHA256 hashes. In the contentdata mode, the files need to be reconstructed with the correct values, while in the metadata mode also the file name and path have to be correct, in order to consider correct recovery.
 
 The authors of the research evaluated two images of different categories. First, they evaluated the tool on the real case images to verify correctness and completeness by comparing the results of the tool the known ground truth. Second, they wanted to evaluate, whether they can recover files from file system that have been overformatted.
 
-\textit{Real world cases}
+\subsection{Real world cases}
 
 Researchers presented some real world cases. In their first case, the metadata mode reconstructed empty files with the correct file names and paths for all non-regular files and all files and folders that have been
 placed correctly. On the other hand, in the contentdata mode, folders were not reconstructed, but all the placed files had been recovered correctly.
@@ -330,7 +332,7 @@ In the next step, they emptied that trash. In metadata mode, the tool only recov
 They went further and they deleted all files from images with sending them to trash and emptying it. After that they copied new files to the resulting new images. The metadata mode recovered all newly written files correctly from all images. The contentdata mode was also able to recover one file form the original file system, whose file content had not been overwritten by new files. Its inode resided in the old journal.
 
 
-\textit{Overformatted file systems}
+\subsection{Overformatted file systems}
 
 In this section, the evaluation, if it is possible to reconstruct files from Ext4 that have been overformatted in different ways, is given. The researchers evaluated this on small image, which provided an upper boundary of what files can be reconstructed.
 
@@ -354,11 +356,15 @@ Table 3 lists the number of found inodes and files from the fast overformatted f
 	\caption{Number of found inodes after selection of the overformatted dataset}
 \end{table}
 
-\textit{Runtime performance}
+\subsection{Runtime performance}
 
 Both implemented methods show similar speed, while the contentdata mode is slightly faster. The runtime is linear in dependence from the image size. Both approaches take about 30s per GB image size.
 
 \section{Conclusions}
+
+In this article, we have introduced the readers to the structure and functioning of ext2, ext3 and ext4 filesystems. For ext4, we have presented a novel approach of data recovery, which is able to restore data even in case of a corrupted superblock \cite{afeic}. The solution was proved to be successful in many situations and was adapted for Sleuthkit framework.
+
+In future work, the authors want to add backward compatibility, so even ext4 filesystems upgraded from ext3 would be also supported. This is not possible now, as only extents are considered, not (in)direct pointers, which initially remain in a converted ext4 filesystem.
 
 \bibliographystyle{abbrv}
 \bibliography{paper}
