@@ -162,7 +162,128 @@ Authors of the paper present an advanced method that uses patteren-based file ca
 \item Files without content
 \end{enumerate}
 
-\subsection{Related works}
+\subsection{Evaluation of the proposed tool}
+
+In the previous sections, an approach for reconstructing inodes was introduced. It is based on search patterns of different inode attributes. All inodes that match the patterns are considered potential inodes. Using their extent tree, the file content can be reconstructed. In this section, we present an evaluation of the quality of each search pattern and also the completeness and correctness of presented tool. It was firstly introduced in the 2017 paper by A. Dewald and S. Seufert \cite{afeic}.
+
+\textit{Dataset}
+
+They have built a dataset with different hard disk images to evaluate their approach and Sleuthkit implementation of the tool. They have used different file system sizes to cover different configurations that can occur when formatting disks of different sizes with default values. 
+Further, they have built test cases where they deleted specific files or changed file system parameters that might influence the success of the approach.
+They distinguished two for images where they have deleted files:
+\begin{itemize}
+\item files that have been deleted directly
+\item files that have been deleted by moving to the trash first.
+\end{itemize}
+They also made a case where they deleted all files and copied new ones on the file system to check if the former files can be recovered.
+Further, they compared Ext4 file systems with enabled and
+disabled journal and deleted files. To create a more realistic
+example image, they created one that contains an entire Ubuntu
+Linux installation with various files that have been moved, deleted
+and modified and also containing symbolic links, device files and
+other non-regular file types to cover a broad spectrum.
+At the end, they created images where they overformatted the existing Ext4 with NTFS or again Ext4. For each of those cases, they compared standard and quick formatting. The dataset contained mostly small images.
+
+\textit{Search patterns and selectivity}
+
+In the paper, they checked, how well the different patterns perform. 
+To test this, they choose the image with installed Ubuntu and various cases. They used the Sleuthkit tool fsstat to provide a ground truth about the number of reserved inodes.
+Considering the first 10 inodes to be reserved, there remained 201.269 files, of which they checked how many are regular files and directories.
+
+Each pattern was tested on each physical address and can accept or decline this address as potential inode. Accepted addresses that lie within an area of an inode table at a valid offset and can be reconstructed successfully are listed as hits in the table. This is the total number of files in the file system. Table misses are structures that might be a valid inode, but reside outside an inode table. Those could be false positives, but could also be copies of inodes for example in the file system journal. Similarly, address misses are potential inode addresses that do not lie at a 128 byte inode boundary.
+
+Misses do not necessarily mean false positives, so they are not rejected at the first place. The number of accepted addresses for the pattern is the sum of t-misses and a-misses, while the selectivity of each pattern is the number compared to the total number of possible addresses.
+
+Table 1 shows the number of identified potential inodes for each pattern. 'k' stands for thousand, 'M' for million and 'G' for billion, while t-miss are table misses, a-miss are address misses. The selectivity is hits compared to all misses.
+
+\begin{table}
+\centering
+\includegraphics[width=0.48\textwidth]{images/selectivity.png}
+	\caption{Search pattern selectivity}
+\end{table}
+
+
+In the following sections, we discuss the results for each pattern in detail.
+
+\textit{Access rights}
+
+While there is no illegal combination for access rights, a search pattern can be defined to search for files with specific rights or to cover the most common access right combinations. In the configuration file of the proposed tool, the pattern can be adjusted. For the experiment, they choose the most common combinations of access rights in Linux systems. They are shown in table 2
+This pattern accepted only 142.855 valid inodes out of 201.269.  However, this contained almost all regular files and folders.
+
+\begin{table}
+\centering
+\includegraphics[width=0.48\textwidth]{images/rights.png}
+	\caption{Access rights patterns chosen for the experiment}
+\end{table}
+
+\textit{Timestamps}
+
+The timestamp pattern consists of two parts: firstly, they validated the inner consistency of the different timestamps, and in the second part, the investigator might configure a relevant timeframe for his case. For this experiment they choose the timeframe from 2015-01-01 00:00:00 GMT to 2016-01-01 00:00:00 GMT, in which the system was set up and all actions have been performed. Amongst the potential inodes have been 7.140 false positives, so that the number of hits was reduced to 65.170.
+
+With respect to only the inner consistency, they obtained 209.481 hits, 5.708.816 t-misses and 1.416.653.929 a-misses. 8.213 of the hits have been identified as false positives, however, all other valid 201.264 have been found.
+
+\textit{Number of hard links}
+
+In the paper, they have checked whether the internal number of hard link counter of a potential inode is larger then 0. All 201.269 potential inodes were accepted by this, beside special inodes 7 and 8, which are counted as false positives.
+
+\textit{Extent flag and header}
+
+Researchers evaluated the pattern for the extent flag and extent headers separately. The selectivity of the second header is very high, because of the 2 byte magic number. Its pattern is the only pattern, that produces far more table misses that address misses. This pattern also matches various content data blocks. However, all regular files and folder have been accepted by this pattern, along with 8.074 false positives. 
+Also, inodes of deleted files are accepted by this pattern too. 
+
+\textit{File type}
+
+The authors of the paper were restricted only to regular files and folders, so they adjusted the file type pattern accordingly. Besides 8.068 false positives, this pattern matches on all 142.919 inodes they searched for.
+
+\textit{Pattern combination}
+
+In this experiment, 3 most restrictive patterns were the extent headers, timestamp intervals and access rights. Last two include some semantic filtering, so researchers did not include them in the next experiments to verify correctness of the tool.
+
+\textit{Completeness and correctness}
+
+To evaluate completeness and correctness of the tool, both operation modes of the tool were testet and compared. Correct recovery was checked with MD5 and SHA256 hashes. In the contentdata mode, the files need to be reconstructed with the correct values, while in the metadata mode also the file name and path have to be correct, in order to consider correct recovery.
+
+The authors of the research evaluated two images of different categories. First, they evaluated the tool on the real case images to verify correctness and completeness by comparing the results of the tool the known ground truth. Second, they wanted to evaluate, whether they can recover files from file system that have been overformatted.
+
+\textit{Real world cases}
+
+Researchers presented some real world cases. In their first case, the metadata mode reconstructed empty files with the correct file names and paths for all non-regular files and all files and folders that have been
+placed correctly. On the other hand, in the contentdata mode, folders were not reconstructed, but all the placed files had been recovered correctly.
+
+They created one image by sending all files on the image to trash. The trash contained all the original files, as well as metadata files that documented the original paths and times for deletion, which all had been recovered by the tool.
+
+In the next step, they emptied that trash. In metadata mode, the tool only recovered the empty root and trash folder. But in the contentdata mode, all files were reconstructed correctly, just without original file names. 
+
+They went further and they deleted all files from images with sending them to trash and emptying it. After that they copied new files to the resulting new images. The metadata mode recovered all newly written files correctly from all images. The contentdata mode was also able to recover one file form the original file system, whose file content had not been overwritten by new files. Its inode resided in the old journal.
+
+
+\textit{Overformatted file systems}
+
+In this section, the evaluation, if it is possible to reconstruct files from Ext4 that have been overformatted in different ways, is given. The researchers evaluated this on small image, which provided an upper boundary of what files can be reconstructed.
+
+They overformatted the original file with Ext4 and NTFS file systems in full formatting mode. In those cases, the blocks had been zeroed and they were not able to recover any files. Ext4 as well as NTFS provide an option for so called fast formatting, where no blocks are zeroed while formatting and only newly used blocks are overwritten.
+
+The image \texttt{small\_fastExt4.img} 
+ had been created by using the same default parameters when overformatting the volume as used for the original formatting. The tool recovered all but 3 of the original files and all but 2 folders in the metadata mode, while in the contentdata mode it additionally recovered the journal from inode 8 as a file.
+
+In \texttt{small\_fastdiffExt4.img} non-default parameters had been used 
+ for formatting. None of the original inode table resided in areas that had not been overwritten and the metadata mode was not able to recover files. The journal had not been overwritten, so that in the content data mode, the tool was able to recover 125 files, of which 52 were totally unmodified, but the others had been partly overwritten.
+
+In the image 
+\texttt{small\_fastNTFS.img}
+, the structures that had been created for the NTFS file system, did not overwrite the area of the original inode tables and both operation modes were able to recover all the original files, of which only some had modified content and some blocks had been used by the new file system.
+
+Table 3 lists the number of found inodes and files from the fast overformatted file systems and compared results from both modes of the tool.
+
+\begin{table}
+\centering
+\includegraphics[width=0.48\textwidth]{images/number.png}
+	\caption{Number of found inodes after selection of the overformatted dataset}
+\end{table}
+
+\textit{Runtime performance}
+
+Both implemented methods show similar speed, while the contentdata mode is slightly faster. The runtime is linear in dependence from the image size. Both approaches take about 30s per GB image size.
 
 \section{Conclusions}
 
