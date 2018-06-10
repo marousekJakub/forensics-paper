@@ -259,8 +259,8 @@ In the following sections, we discuss the results for each pattern in detail.
 
 \subsubsection{Access rights}
 
-While there is no illegal combination for access rights, a search pattern can be defined to search for files with specific rights or to cover the most common access right combinations. In the configuration file of the proposed tool, the pattern can be adjusted. For the experiment, they choose the most common combinations of access rights in Linux systems. They are shown in table 2
-This pattern accepted only 142.855 valid inodes out of 201.269.  However, this contained almost all regular files and folders.
+While there is no illegal combination for access rights, a search pattern can be defined to search for files with specific rights or to cover the most common access rights combinations. In the configuration file of the proposed tool, the pattern can be adjusted. For the experiment, they choose the most common combinations of access rights in Linux systems, which are shown in Table 2.
+This pattern accepted only 142\,855 valid inodes out of 201\,269. However, this contained almost all regular files and folders.
 
 \begin{table}
 \centering
@@ -270,22 +270,22 @@ This pattern accepted only 142.855 valid inodes out of 201.269.  However, this c
 
 \subsubsection{Timestamps}
 
-The timestamp pattern consists of two parts: firstly, they validated the inner consistency of the different timestamps, and in the second part, the investigator might configure a relevant timeframe for his case. For this experiment they choose the timeframe from 2015-01-01 00:00:00 GMT to 2016-01-01 00:00:00 GMT, in which the system was set up and all actions have been performed. Amongst the potential inodes have been 7.140 false positives, so that the number of hits was reduced to 65.170.
+The timestamp pattern consists of two parts: firstly, they validated the inner consistency of the different timestamps, and in the second part, the investigator might configure a relevant timeframe for his case. For this experiment they choose the timeframe from 2015-01-01 00:00:00 GMT to 2016-01-01 00:00:00 GMT, in which the system was set up and all actions have been performed. Amongst the potential inodes have been 7\,140 false positives, so that the number of hits was reduced to 65\,170.
 
-With respect to only the inner consistency, they obtained 209.481 hits, 5.708.816 t-misses and 1.416.653.929 a-misses. 8.213 of the hits have been identified as false positives, however, all other valid 201.264 have been found.
+With respect only to the inner consistency, they obtained 209\,481 hits, 5\,708\,816 t-misses and 1\,416\,653\,929 a-misses. 8\,213 of the hits have been identified as false positives, however, all other valid 201\,264 have been found.
 
 \subsubsection{Number of hard links}
 
-In the paper, they have checked whether the internal number of hard link counter of a potential inode is larger then 0. All 201.269 potential inodes were accepted by this, beside special inodes 7 and 8, which are counted as false positives.
+In the paper, they have checked whether the internal number of hard link counter of a potential inode is larger then 0. All 201\,269 potential inodes were accepted by this, beside special inodes 7 and 8, which are counted as false positives.
 
 \subsubsection{Extent flag and header}
 
-Researchers evaluated the pattern for the extent flag and extent headers separately. The selectivity of the second header is very high, because of the 2 byte magic number. Its pattern is the only pattern, that produces far more table misses that address misses. This pattern also matches various content data blocks. However, all regular files and folder have been accepted by this pattern, along with 8.074 false positives. 
+Researchers evaluated the pattern for the extent flag and extent headers separately. The selectivity of the second header is very high, because of the 2 byte magic number. Its pattern is the only pattern that produces far more table misses that address misses. This pattern also matches various content data blocks. However, all regular files and folder have been accepted by this pattern, along with 8\,074 false positives. 
 Also, inodes of deleted files are accepted by this pattern too. 
 
 \subsubsection{File type}
 
-The authors of the paper were restricted only to regular files and folders, so they adjusted the file type pattern accordingly. Besides 8.068 false positives, this pattern matches all 142.919 inodes they searched for.
+The authors of the paper were restricted only to regular files and folders, so they adjusted the file type pattern accordingly. Besides 8\,068 false positives, this pattern matches all 142\,919 inodes they searched for.
 
 \subsubsection{Pattern combination}
 
@@ -293,16 +293,16 @@ In this experiment, 3 most restrictive patterns were the extent headers, timesta
 
 \subsubsection{Completeness and correctness}
 
-To evaluate completeness and correctness of the tool, both operation modes of the tool were testet and compared. Correct recovery was checked with MD5 and SHA256 hashes. In the contentdata mode, the files need to be reconstructed with the correct values, while in the metadata mode also the file name and path have to be correct, in order to consider correct recovery.
+To evaluate completeness and correctness of the tool, both operation modes of the tool were tested and compared. Correct recovery was checked with MD5 and SHA256 hashes. In the contentdata mode, the files need to be reconstructed with the correct values, while in the metadata mode also the file name and path have to be correct, in order to ensure correct recovery.
 
-The authors of the research evaluated two images of different categories. First, they evaluated the tool on the real case images to verify correctness and completeness by comparing the results of the tool the known ground truth. Second, they wanted to evaluate, whether they can recover files from filesystem that have been overformatted.
+The authors of the research evaluated two images of different categories. First, they evaluated the tool on the real case images to verify correctness and completeness by comparing the results of the tool to the known ground truth. Second, they wanted to evaluate whether they can recover files from filesystem that have been overformatted.
 
 \subsection{Real world cases}
 
 Researchers presented some real world cases. In their first case, the metadata mode reconstructed empty files with the correct file names and paths for all non-regular files and all files and folders that have been
 placed correctly. On the other hand, in the contentdata mode, folders were not reconstructed, but all the placed files had been recovered correctly.
 
-They created one image by sending all files on the image to trash. The trash contained all the original files, as well as metadata files that documented the original paths and times for deletion, which all had been recovered by the tool.
+They created one image by sending all files on the image to the trash. The trash contained all the original files, as well as metadata files that documented the original paths and times for deletion, which all had been recovered by the tool.
 
 In the next step, they emptied that trash. In metadata mode, the tool only recovered the empty root and trash folder. But in the contentdata mode, all files were reconstructed correctly, just without original file names. 
 
@@ -323,7 +323,7 @@ In \texttt{small\_fastdiffExt4.img} non-default parameters had been used
 
 In the image 
 \texttt{small\_fastNTFS.img}
-, the structures that had been created for the NTFS filesystem, did not overwrite the area of the original inode tables and both operation modes were able to recover all the original files, of which only some had modified content and some blocks had been used by the new filesystem.
+, the structures that had been created for the NTFS filesystem did not overwrite the area of the original inode tables and both operation modes were able to recover all the original files, of which only some had modified content and some blocks had been used by the new filesystem.
 
 Table 3 lists the number of found inodes and files from the fast overformatted filesystems and compared results from both modes of the tool.
 
